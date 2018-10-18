@@ -10,6 +10,7 @@
 import numpy as np
 # from scipy.misc import imread, imresize
 import cv2
+import sys
 
 try:
     xrange          # Python 2
@@ -32,11 +33,18 @@ def im_list_to_blob(ims):
 
     return blob
 
-def prep_im_for_blob(im, pixel_means, target_size, max_size):
-    """Mean subtract and scale an image for use in a blob."""
 
+def prep_im_for_blob(im, pixel_means, pixel_stds, target_size, max_size, pixel_range_norm=False,
+                     add_norm_type="mean_center"):
+    """Mean subtract and scale an image for use in a blob."""
     im = im.astype(np.float32, copy=False)
-    im -= pixel_means
+    if pixel_range_norm:
+        im /= 255.0
+    if add_norm_type == "mean_center":
+        im -= pixel_means
+    elif add_norm_type == "standard_normal":
+        im -= pixel_means
+        im /= pixel_stds
     # im = im[:, :, ::-1]
     im_shape = im.shape
     im_size_min = np.min(im_shape[0:2])
@@ -46,7 +54,6 @@ def prep_im_for_blob(im, pixel_means, target_size, max_size):
     # if np.round(im_scale * im_size_max) > max_size:
     #     im_scale = float(max_size) / float(im_size_max)
     # im = imresize(im, im_scale)
-    im = cv2.resize(im, None, None, fx=im_scale, fy=im_scale,
-                    interpolation=cv2.INTER_LINEAR)
+    im = cv2.resize(im, None, None, fx=im_scale, fy=im_scale, interpolation=cv2.INTER_LINEAR)
 
     return im, im_scale

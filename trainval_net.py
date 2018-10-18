@@ -128,6 +128,16 @@ def train(dataset="kaggle_pna", train_ds ="train", arch="couplenet", net="res152
         for key,value in kwargs.items():
             cfg[key]=value
 
+
+    # add if PIXEL_RANGE_NORM, set the correct config Pixel means and std
+
+    # print debug statements for this config and other config parameters u can set just to confirm
+
+    # add some debug print statements within code so people can always confirm
+    if cfg.PIXEL_RANGE_NORM:
+        cfg.PIXEL_MEANS = np.array([[[0.485, 0.456, 0.406]]])
+        cfg.PIXEL_STDS = np.array([[[0.229, 0.224, 0.225]]])
+
     print('Using config:')
     pprint.pprint(cfg)
     np.random.seed(cfg.RNG_SEED)

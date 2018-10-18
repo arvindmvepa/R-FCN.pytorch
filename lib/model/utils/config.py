@@ -259,6 +259,12 @@ __C.DEDUP_BOXES = 1. / 16.
 # they were trained with
 __C.PIXEL_MEANS = np.array([[[102.9801, 115.9465, 122.7717]]])
 
+__C.PIXEL_STDS = None
+
+__C.PIXEL_RANGE_NORM = False
+
+__C.ADD_NORM_TYPE = "mean_center"
+
 # For reproducibility
 __C.RNG_SEED = 3
 
