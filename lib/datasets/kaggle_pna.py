@@ -74,9 +74,9 @@ class kaggle_pna(imdb):
         #print('dcm_dir: ', dcm_dir)
         sys.stdout.flush()
         if self._image_set == "train":
-            image_path = os.path.join(self._data_path, "DCMImagesTrain", pid + self._image_ext)
+            image_path = os.path.join(self._data_path, "DCMImagesTrainVal", pid + self._image_ext)
         if self._image_set == "val":
-            image_path = os.path.join(self._data_path, "DCMImagesVal", pid + self._image_ext)
+            image_path = os.path.join(self._data_path, "DCMImagesTrainVal", pid + self._image_ext)
         if self._image_set == "trainval":
             image_path = os.path.join(self._data_path, "DCMImagesTrainVal", pid + self._image_ext)
         if self._image_set == "test":
@@ -89,8 +89,10 @@ class kaggle_pna(imdb):
         Load the pids listed in this dataset's image set file.
         """
         # Example path to image set file: self._devkit_path + /PNAdevkit/PNA2018/ImageSets/test.txt
-        image_set_file = os.path.join(self._data_path, 'ImageSets',
-                                      self._image_set + '.txt')
+        if self._image_set == "train" or self._image_set == "val":
+            image_set_file = os.path.join('.', self._image_set + '.txt')
+        else:
+            image_set_file = os.path.join(self._data_path, 'ImageSets', self._image_set + '.txt')
         assert os.path.exists(image_set_file), 'Path does not exist: {}'.format(image_set_file)
         with open(image_set_file) as f:
             image_index = [x.strip() for x in f.readlines()]
