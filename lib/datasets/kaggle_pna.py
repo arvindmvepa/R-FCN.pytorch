@@ -72,7 +72,6 @@ class kaggle_pna(imdb):
         """
         #dcm_dir = "DCMImagesTest" if self.config['mode'] == 'test' else "DCMImagesTrain"
         #print('dcm_dir: ', dcm_dir)
-        sys.stdout.flush()
         if self._image_set == "train":
             image_path = os.path.join(self._data_path, "DCMImagesTrainVal", pid + self._image_ext)
         if self._image_set == "val":
@@ -91,17 +90,11 @@ class kaggle_pna(imdb):
         # Example path to image set file: self._devkit_path + /PNAdevkit/PNA2018/ImageSets/test.txt
         if self._image_set == "train" or self._image_set == "val":
             image_set_file = os.path.join('.', self._image_set + '.txt')
-            print("debug")
-            print(self._image_set)
-            sys.stdout.flush()
         else:
             image_set_file = os.path.join(self._data_path, 'ImageSets', self._image_set + '.txt')
         assert os.path.exists(image_set_file), 'Path does not exist: {}'.format(image_set_file)
         with open(image_set_file) as f:
             image_index = [x.strip() for x in f.readlines()]
-            print("image_index")
-            print(image_index)
-            sys.stdout.flush()
         return image_index
 
     def _get_default_path(self):
