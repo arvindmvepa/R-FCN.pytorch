@@ -42,7 +42,7 @@ momentum = cfg.TRAIN.MOMENTUM
 weight_decay = cfg.TRAIN.WEIGHT_DECAY
 
 
-def test(test_images_paths=(), arch="couplenet", net="res152", load_dir="save", output_dir="output",
+def test(test_images_paths=(), test_ds="val", arch="couplenet", net="res152", load_dir="save", output_dir="output",
          cuda=True, large_scale=False, class_agnostic=False, checksession = 1, checkepoch=1, checkpoint=10021,
          batch_size=1, vis=False, anchor_scales=4, min_conf=.5, **kwargs):
 
@@ -87,7 +87,10 @@ def test(test_images_paths=(), arch="couplenet", net="res152", load_dir="save", 
     # Dataset related settings: MAX_NUM_GT_BOXES: 20, 30, 50
     np.random.seed(cfg.RNG_SEED)
 
-    imdbval_name = "pna_2018_test"
+    if test_ds == "val":
+        imdbval_name = "pna_2018_val"
+    elif test_ds == "test":
+        imdbval_name = "pna_2018_test"
 
     set_cfgs = ['ANCHOR_SCALES', str(scales), 'ANCHOR_RATIOS', '[0.5,1,2]']
 
