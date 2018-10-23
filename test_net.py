@@ -42,14 +42,16 @@ momentum = cfg.TRAIN.MOMENTUM
 weight_decay = cfg.TRAIN.WEIGHT_DECAY
 
 
-def test(dataset="kaggle_pna", test_ds="val", arch="couplenet", net="res152", load_dir="save", output_dir="output",
+def test(test_images_paths=(), arch="couplenet", net="res152", load_dir="save", output_dir="output",
          cuda=True, large_scale=False, class_agnostic=False, checksession = 1, checkepoch=1, checkpoint=10021,
          batch_size=1, vis=False, anchor_scales=4, min_conf=.5, **kwargs):
+
+    dataset_name = "kaggle_pna"
 
     print("Test Arguments: {}".format(locals()))
 
     # create output directory
-    output_dir = os.path.join(output_dir, arch, net, dataset)
+    output_dir = os.path.join(output_dir, arch, net, dataset_name)
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
 
@@ -85,10 +87,8 @@ def test(dataset="kaggle_pna", test_ds="val", arch="couplenet", net="res152", lo
     # Dataset related settings: MAX_NUM_GT_BOXES: 20, 30, 50
     np.random.seed(cfg.RNG_SEED)
 
-    if test_ds == "val":
-        imdbval_name = "pna_2018_val"
-    elif test_ds == "test":
-        imdbval_name = "pna_2018_test"
+    imdbval_name = "pna_2018_test"
+
     set_cfgs = ['ANCHOR_SCALES', str(scales), 'ANCHOR_RATIOS', '[0.5,1,2]']
 
     cfg_file = "cfgs/{}_ls.yml".format(net) if large_scale else "cfgs/{}.yml".format(net)
@@ -126,13 +126,13 @@ def test(dataset="kaggle_pna", test_ds="val", arch="couplenet", net="res152", lo
 
     cfg.TRAIN.USE_FLIPPED = False
 
-    imdb, roidb, ratio_list, ratio_index = combined_roidb(imdbval_name, False)
+    imdb, roidb, ratio_list, ratio_index = combined_roidb(dataset_name, False, test_images_paths)
     imdb.competition_mode(on=True)
     imdb.sub_mode = True
     print('{:d} roidb entries'.format(len(roidb)))
 
     # Trained network weights path
-    input_dir = load_dir + "/" + arch + "/" + net + "/" + dataset
+    input_dir = load_dir + "/" + arch + "/" + net + "/" + dataset_name
     if not os.path.exists(input_dir):
         raise Exception('There is no input directory for loading network from ' + input_dir)
     load_name = os.path.join(input_dir,
@@ -329,13 +329,12 @@ def test(dataset="kaggle_pna", test_ds="val", arch="couplenet", net="res152", lo
 
     print('Kaggle submission file')
 
-    if dataset == 'kaggle_pna':
-        cipher = {'rcnn': 'alpha', 'rfcn': 'beta', 'couplenet': 'gamma'}
-        created = datetime.now().strftime("%Y%m%d%H%M")
-        sub_file = cipher[arch] + '_' + created + '_cls-{}_submission.txt'
-        print('Submit file that ends with "_cls-3_submission.txt" file.')
-        submission_file = os.path.join(output_dir, sub_file)
-        imdb.write_kaggle_submission_file(all_boxes, submission_file, min_conf=min_conf)
+    cipher = {'rcnn': 'alpha', 'rfcn': 'beta', 'couplenet': 'gamma'}
+    created = datetime.now().strftime("%Y%m%d%H%M")
+    sub_file = cipher[arch] + '_' + created + '_cls-{}_submission.txt'
+    print('Submit file that ends with "_cls-3_submission.txt" file.')
+    submission_file = os.path.join(output_dir, sub_file)
+    imdb.write_kaggle_submission_file(all_boxes, submission_file, min_conf=min_conf)
 
     end = time.time()
     print("test time: %0.4fs" % (end - start))

@@ -79,7 +79,7 @@ def filter_roidb(roidb):
     return roidb
 
 
-def combined_roidb(imdb_names, training=True):
+def combined_roidb(imdb_names, training=True, test_images_paths=()):
     """
     Combine multiple roidbs
     """
@@ -92,8 +92,8 @@ def combined_roidb(imdb_names, training=True):
 
         return imdb.roidb
 
-    def get_roidb(imdb_name):
-        imdb = get_imdb(imdb_name)
+    def get_roidb(imdb_name, test_images_paths):
+        imdb = get_imdb(imdb_name, test_images_paths=test_images_paths)
         print('Loaded dataset `{:s}` for training'.format(imdb.name))
         imdb.set_proposal_method(cfg.TRAIN.PROPOSAL_METHOD)
         print('Set proposal method: {:s}'.format(cfg.TRAIN.PROPOSAL_METHOD))
@@ -106,10 +106,10 @@ def combined_roidb(imdb_names, training=True):
     if len(roidbs) > 1:
         for r in roidbs[1:]:
             roidb.extend(r)
-        tmp = get_imdb(imdb_names.split('+')[1])
+        tmp = get_imdb(imdb_names.split('+')[1], test_images_paths=test_images_paths)
         imdb = datasets.imdb.imdb(imdb_names, tmp.classes)
     else:
-        imdb = get_imdb(imdb_names)
+        imdb = get_imdb(imdb_names, test_images_paths=test_images_paths)
 
     if training:
         roidb = filter_roidb(roidb)

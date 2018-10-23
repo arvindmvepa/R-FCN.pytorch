@@ -64,13 +64,13 @@ for split in ['train', 'val', 'val1', 'val2', 'test']:
 for year in ['2018']:
   for split in ['train', 'val', 'trainval', 'test']:
     name = 'pna_{}_{}'.format(year, split)
-    __sets[name] = (lambda split=split, year=year: kaggle_pna(split, year))
+    __sets[name] = (lambda split=split, year=year, **kwargs: kaggle_pna(split, year, **kwargs))
 
-def get_imdb(name):
+def get_imdb(name, **kwargs):
   """Get an imdb (image database) by name."""
   if name not in __sets:
     raise KeyError('Unknown dataset: {}'.format(name))
-  return __sets[name]()
+  return __sets[name](**kwargs)
 
 
 def list_imdbs():

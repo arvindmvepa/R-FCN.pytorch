@@ -25,12 +25,10 @@ except NameError:
 
 
 class kaggle_pna(imdb):
-    def __init__(self, image_set, year, devkit_path=None):
+    def __init__(self, image_set, year, test_images_paths=()):
         imdb.__init__(self, 'pna_' + year + '_' + image_set)
         self._year = year
         self._image_set = image_set
-        self._devkit_path = self._get_default_path() if devkit_path is None else devkit_path
-        self._data_path = self._devkit_path
         # TODO: Change _classes for binary
         self._classes = ('__background__',  # background - always index 0
                          'no lung opacity / not normal',
@@ -38,9 +36,9 @@ class kaggle_pna(imdb):
                          'lung opacity')
         self._class_to_ind = dict(zip(self.classes, xrange(self.num_classes)))
         self._image_ext = '.dcm'
-        self._image_index = self._load_image_set_index()
+        self._image_index = self._load_image_set_index(test_images_paths)
+        self.pid_image_path_map = self.get_pid_image_path_map(test_images_paths)
         self._roidb_handler = self.gt_roidb
-        self._df = pd.read_csv(os.path.join(self._data_path, 'Annotations', 'train_labels_bboxes.csv'))
         self._salt = None  # TODO
         self._comp_id = None  # TODO
         self.config = {'cleanup': True,
@@ -51,14 +49,11 @@ class kaggle_pna(imdb):
                        'min_size': 2,
                        'mode': "train"}  # Default is 'train'
 
-        assert os.path.exists(self._devkit_path), 'Path does not exist: {}'.format(self._devkit_path)
-        assert os.path.exists(self._data_path), 'Path does not exist: {}'.format(self._data_path)
-
     def image_path_at(self, pid):
         """
         Return the absolute path to image pid.dcm in the image sequence.
         """
-        return self.image_path_from_index(self._image_index[pid])
+        return self.pid_image_path_map(self._image_index[pid])
 
     def image_id_at(self, pid):
         """
@@ -66,6 +61,7 @@ class kaggle_pna(imdb):
         """
         return pid
 
+    # just modify this
     def image_path_from_index(self, pid):
         """
         Construct an image path from the image's "index" identifier.
@@ -84,23 +80,15 @@ class kaggle_pna(imdb):
         assert os.path.exists(image_path), 'Path does not exist: {}'.format(image_path)
         return image_path
 
-    def _load_image_set_index(self):
+    def _load_image_set_index(self, test_image_paths=()):
         """
         Load the pids listed in this dataset's image set file.
         """
-        # Example path to image set file: self._devkit_path + /PNAdevkit/PNA2018/ImageSets/test.txt
-        image_set_file = os.path.join(self._data_path, 'ImageSets',
-                                      self._image_set + '.txt')
-        assert os.path.exists(image_set_file), 'Path does not exist: {}'.format(image_set_file)
-        with open(image_set_file) as f:
-            image_index = [x.strip() for x in f.readlines()]
+        image_index = [os.path.splitext(os.path.basename(test_image_path))[0] for test_image_path in test_image_paths]
         return image_index
 
-    def _get_default_path(self):
-        """
-        Return the default path where Kaggle Pneumonia is expected to be installed.
-        """
-        return os.path.join(cfg.DATA_DIR, 'PNAdevkit', 'PNA' + self._year)
+    def get_pid_image_path_map(self, test_image_paths=()):
+        return {os.path.splitext(os.path.basename(test_image_path))[0]:test_image_path for test_image_path in test_image_paths}
 
     def gt_roidb(self):
         """
@@ -147,40 +135,6 @@ class kaggle_pna(imdb):
     def _load_selective_search_roidb(self, gt_roidb):
         # TODO: Implement if needed. As we are using RPN, selective search is not needed.
         pass
-
-    def _load_pna_annnotation(self, pid):
-        objs = self._df.query('patientId=="{}"'.format(pid))
-        num_objs = len(objs)
-
-        boxes = np.zeros((num_objs, 4), dtype=np.uint16)
-        gt_classes = np.zeros((num_objs), dtype=np.int32)
-        overlaps = np.zeros((num_objs, self.num_classes), dtype=np.float32)  # Not used
-        seg_areas = np.zeros((num_objs), dtype=np.float32)  # Not used
-        ishards = np.zeros((num_objs), dtype=np.int32)  # Not used
-
-        objs.reset_index(drop=True, inplace=True)
-        objs = pd.DataFrame(objs)
-        for ix, obj in objs.iterrows():
-            # Get bounding box coordinates (use width and height to get x2, y2)
-            x1 = float(obj['x'])
-            y1 = float(obj['y'])
-            x2 = float(x1 + obj['width'])
-            y2 = float(y1 + obj['height'])
-            boxes[ix, :] = [x1, y1, x2, y2]
-
-            ishards[ix] = 0  # Difficult is set as 0 as no information available
-            cls = self._class_to_ind[obj['class'].lower()]  # TODO: Change here for binary
-            gt_classes[ix] = cls
-            overlaps[ix, cls] = 1.0  # TODO: Check if 0.0 makes any difference, check pascal data xml
-            seg_areas[ix] = 0.0
-        overlaps = scipy.sparse.csr_matrix(overlaps)
-
-        return {'boxes': boxes,
-                'gt_classes': gt_classes,
-                'gt_ishard': ishards,
-                'gt_overlaps': overlaps,
-                'flipped': False,
-                'seg_areas': seg_areas}
 
     def _get_comp_id(self):
         comp_id = (self._comp_id + '_' + self._salt if self.config['use_salt']
