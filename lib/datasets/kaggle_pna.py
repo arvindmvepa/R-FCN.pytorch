@@ -53,7 +53,7 @@ class kaggle_pna(imdb):
         """
         Return the absolute path to image pid.dcm in the image sequence.
         """
-        return self.pid_image_path_map(self._image_index[pid])
+        return self.pid_image_path_map[self._image_index[pid]]
 
     def image_id_at(self, pid):
         """
