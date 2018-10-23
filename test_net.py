@@ -126,7 +126,7 @@ def test(test_images_paths=(), arch="couplenet", net="res152", load_dir="save", 
 
     cfg.TRAIN.USE_FLIPPED = False
 
-    imdb, roidb, ratio_list, ratio_index = combined_roidb(dataset_name, False, test_images_paths)
+    imdb, roidb, ratio_list, ratio_index = combined_roidb(imdbval_name, False, test_images_paths)
     imdb.competition_mode(on=True)
     imdb.sub_mode = True
     print('{:d} roidb entries'.format(len(roidb)))
