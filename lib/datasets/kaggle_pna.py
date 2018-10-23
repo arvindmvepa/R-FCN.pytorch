@@ -136,6 +136,22 @@ class kaggle_pna(imdb):
         # TODO: Implement if needed. As we are using RPN, selective search is not needed.
         pass
 
+    def _load_pna_annnotation(self, pid):
+        num_objs = 0
+
+        boxes = np.zeros((num_objs, 4), dtype=np.uint16)
+        gt_classes = np.zeros((num_objs), dtype=np.int32)
+        overlaps = np.zeros((num_objs, self.num_classes), dtype=np.float32)  # Not used
+        seg_areas = np.zeros((num_objs), dtype=np.float32)  # Not used
+        ishards = np.zeros((num_objs), dtype=np.int32)  # Not used
+
+        return {'boxes': boxes,
+                'gt_classes': gt_classes,
+                'gt_ishard': ishards,
+                'gt_overlaps': overlaps,
+                'flipped': False,
+                'seg_areas': seg_areas}
+
     def _get_comp_id(self):
         comp_id = (self._comp_id + '_' + self._salt if self.config['use_salt']
                    else self._comp_id)
