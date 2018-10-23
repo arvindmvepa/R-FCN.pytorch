@@ -42,7 +42,7 @@ momentum = cfg.TRAIN.MOMENTUM
 weight_decay = cfg.TRAIN.WEIGHT_DECAY
 
 
-def test(dataset="kaggle_pna", test_ds="val", arch="couplenet", net="res152", load_dir="save", output_dir="output",
+def test(dataset="kaggle_pna", test_ds="test", arch="couplenet", net="res152", load_dir="save", output_dir="output",
          cuda=True, large_scale=False, class_agnostic=False, checksession = 1, checkepoch=1, checkpoint=10021,
          batch_size=1, vis=False, anchor_scales=4, min_conf=.5, **kwargs):
 
