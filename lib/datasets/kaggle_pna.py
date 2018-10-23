@@ -142,6 +142,7 @@ class kaggle_pna(imdb):
         boxes = np.zeros((num_objs, 4), dtype=np.uint16)
         gt_classes = np.zeros((num_objs), dtype=np.int32)
         overlaps = np.zeros((num_objs, self.num_classes), dtype=np.float32)  # Not used
+        overlaps = scipy.sparse.csr_matrix(overlaps)
         seg_areas = np.zeros((num_objs), dtype=np.float32)  # Not used
         ishards = np.zeros((num_objs), dtype=np.int32)  # Not used
 
