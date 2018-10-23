@@ -100,7 +100,7 @@ def combined_roidb(imdb_names, training=True, test_images_paths=()):
         roidb = get_training_roidb(imdb)
         return roidb
 
-    roidbs = [get_roidb(s) for s in imdb_names.split('+')]
+    roidbs = [get_roidb(s, test_images_paths) for s in imdb_names.split('+')]
     roidb = roidbs[0]
 
     if len(roidbs) > 1:
