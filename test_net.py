@@ -332,7 +332,14 @@ def test(dataset="kaggle_pna", test_ds="val", arch="couplenet", net="res152", lo
     if dataset == 'kaggle_pna':
         cipher = {'rcnn': 'alpha', 'rfcn': 'beta', 'couplenet': 'gamma'}
         created = datetime.now().strftime("%Y%m%d%H%M")
-        sub_file = cipher[arch] + '_' + created + '_cls-{}_submission.txt'
+
+        test_nms = cfg["TEST"]["NMS"]
+        test_rpn_nms = cfg["TEST"]["RPN_NMS_THRESH"]
+        test_rpn_pre_nms_top = cfg["TEST"]["RPN_PRE_NMS_TOP_N"]
+        test_rpn_post_nms_top = cfg["TEST"]["RPN_POST_NMS_TOP_N"]
+        test_rpn_min_size = cfg["TEST"]["RPN_MIN_SIZE"]
+        args = str(test_nms)+"_"+str(test_rpn_nms) +"_"+str(test_rpn_pre_nms_top)+"_"+str(test_rpn_post_nms_top)+"_"+str(test_rpn_min_size)+str(min_conf)+"_"
+        sub_file = cipher[arch] + '_' + args + "_" + created + '_cls-{}_submission.txt'
         print('Submit file that ends with "_cls-3_submission.txt" file.')
         submission_file = os.path.join(output_dir, sub_file)
         imdb.write_kaggle_submission_file(all_boxes, submission_file, min_conf=min_conf)
