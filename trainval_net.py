@@ -94,6 +94,10 @@ def train(dataset="kaggle_pna", train_ds ="train", arch="couplenet", net="res152
         imdb_name = "pna_2018_train"
     elif train_ds == "trainval":
         imdb_name = "pna_2018_trainval"
+    elif train_ds == "train2":
+        imdb_name = "pna_2018_train2"
+    elif train_ds == "trainval2":
+        imdb_name = "pna_2018_trainval2"
 
     set_cfgs = ['ANCHOR_SCALES', str(scales), 'ANCHOR_RATIOS', '[0.5,1,2]', 'MAX_NUM_GT_BOXES', '30']
 

@@ -40,7 +40,7 @@ class kaggle_pna(imdb):
         self._image_ext = '.dcm'
         self._image_index = self._load_image_set_index()
         self._roidb_handler = self.gt_roidb
-        self._df = pd.read_csv(os.path.join(self._data_path, 'Annotations', 'train_labels_bboxes.csv'))
+        self._df = pd.read_csv(os.path.join(self._data_path, 'Annotations', 'train_labels_bboxes_stage_2.csv'))
         self._salt = None  # TODO
         self._comp_id = None  # TODO
         self.config = {'cleanup': True,
@@ -81,6 +81,14 @@ class kaggle_pna(imdb):
             image_path = os.path.join(self._data_path, "DCMImagesTrainVal", pid + self._image_ext)
         if self._image_set == "test":
             image_path = os.path.join(self._data_path, "DCMImagesTest", pid + self._image_ext)
+        if self._image_set == "train2":
+            image_path = os.path.join(self._data_path, "DCMImagesTrain2", pid + self._image_ext)
+        if self._image_set == "val2":
+            image_path = os.path.join(self._data_path, "DCMImagesVal2", pid + self._image_ext)
+        if self._image_set == "trainval2":
+            image_path = os.path.join(self._data_path, "DCMImagesTrainVal2", pid + self._image_ext)
+        if self._image_set == "test2":
+            image_path = os.path.join(self._data_path, "DCMImagesTest2", pid + self._image_ext)
         assert os.path.exists(image_path), 'Path does not exist: {}'.format(image_path)
         return image_path
 

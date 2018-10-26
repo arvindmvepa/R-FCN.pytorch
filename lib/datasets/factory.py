@@ -62,7 +62,7 @@ for split in ['train', 'val', 'val1', 'val2', 'test']:
 
 # Set up Kaggle PNA: pna_<year>_<split>
 for year in ['2018']:
-  for split in ['train', 'val', 'trainval', 'test']:
+  for split in ['train', 'val', 'trainval', 'test', 'train2', 'val2', 'trainval2', 'test2']:
     name = 'pna_{}_{}'.format(year, split)
     __sets[name] = (lambda split=split, year=year: kaggle_pna(split, year))
 

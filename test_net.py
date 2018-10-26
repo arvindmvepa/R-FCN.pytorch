@@ -42,7 +42,7 @@ momentum = cfg.TRAIN.MOMENTUM
 weight_decay = cfg.TRAIN.WEIGHT_DECAY
 
 
-def test(dataset="kaggle_pna", test_ds="val", arch="couplenet", net="res152", load_dir="save", output_dir="output",
+def test(dataset="kaggle_pna", test_ds="val2", arch="couplenet", net="res152", load_dir="save", output_dir="output",
          cuda=True, large_scale=False, class_agnostic=False, checksession = 1, checkepoch=1, checkpoint=10021,
          batch_size=1, vis=False, anchor_scales=4, min_conf=.5, **kwargs):
 
@@ -89,6 +89,10 @@ def test(dataset="kaggle_pna", test_ds="val", arch="couplenet", net="res152", lo
         imdbval_name = "pna_2018_val"
     elif test_ds == "test":
         imdbval_name = "pna_2018_test"
+    elif test_ds == "val2":
+        imdbval_name = "pna_2018_val2"
+    elif test_ds == "test2":
+        imdbval_name = "pna_2018_test2"
     set_cfgs = ['ANCHOR_SCALES', str(scales), 'ANCHOR_RATIOS', '[0.5,1,2]']
 
     cfg_file = "cfgs/{}_ls.yml".format(net) if large_scale else "cfgs/{}.yml".format(net)
