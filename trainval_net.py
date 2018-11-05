@@ -55,13 +55,28 @@ class sampler(Sampler):
     def __len__(self):
         return self.num_data
 
+def write_train_files():
+    model_repo_path = os.path.dirname(os.path.dirname(os.path.dirname(model.__file__)))
+
+    data_dir = 'data/PNAdevkit/PNA2018'
+    d = os.path.join(model_repo_path, data_dir, 'DCMImagesTrain')
+    pids = [pid.split('.')[0] for pid in os.listdir(d)]
+
+    ImageSets_dir = os.path.join(model_repo_path, data_dir, 'ImageSets')
+    if not os.path.exists(ImageSets_dir):
+        os.mkdir(ImageSets_dir)
+
+    with open(os.path.join(ImageSets_dir, 'train.txt'), 'w') as f:
+        for pid in pids:
+            f.write("{}\n".format(pid))
+
 def train(dataset="kaggle_pna", train_ds ="train", arch="couplenet", net="res152", start_epoch=1, max_epochs=20,
           disp_interval=100, save_dir="save", num_workers=4, cuda=True, large_scale=False, mGPUs=True, batch_size=4,
           class_agnostic=False, anchor_scales=4, optimizer="sgd", lr_decay_step=10, lr_decay_gamma=.1, session=1,
           resume=False, checksession=1, checkepoch=1, checkpoint=0, use_tfboard=False, flip_prob=0.0, scale=0.0,
           scale_prob=0.0, translate=0.0, translate_prob=0.0, angle=0.0, dist="cont", rotate_prob=0.0,
           shear_factor=0.0, shear_prob=0.0, rpn_loss_cls_wt=1, rpn_loss_box_wt=1, RCNN_loss_cls_wt=1,
-          RCNN_loss_bbox_wt=1, model_tag="",**kwargs):
+          RCNN_loss_bbox_wt=1, model_tag="model", **kwargs):
 
     print("Train Arguments: {}".format(locals()))
     method_kwargs = copy.deepcopy(locals())
@@ -101,7 +116,6 @@ def train(dataset="kaggle_pna", train_ds ="train", arch="couplenet", net="res152
 
     set_cfgs = ['ANCHOR_SCALES', str(scales), 'ANCHOR_RATIOS', '[0.5,1,2]', 'MAX_NUM_GT_BOXES', '30']
 
-    import model
     model_repo_path = os.path.dirname(os.path.dirname(os.path.dirname(model.__file__)))
 
     cfg_file = "cfgs/{}_ls.yml".format(net) if large_scale else "cfgs/{}.yml".format(net)
@@ -154,7 +168,8 @@ def train(dataset="kaggle_pna", train_ds ="train", arch="couplenet", net="res152
         else:
             method_kwargs[key] = value
 
-    with open('train_config.json', 'w') as fp:
+    train_config = os.path.join(model_tag, 'train_config.json')
+    with open(train_config, 'w') as fp:
         json.dump(method_kwargs, fp)
 
     np.random.seed(cfg.RNG_SEED)
@@ -171,7 +186,7 @@ def train(dataset="kaggle_pna", train_ds ="train", arch="couplenet", net="res152
 
     print('{:d} roidb entries'.format(len(roidb)))
 
-    output_dir = os.path.join(save_dir, arch, net, dataset)
+    output_dir = os.path.join(model_tag, save_dir)
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
 
@@ -248,7 +263,7 @@ def train(dataset="kaggle_pna", train_ds ="train", arch="couplenet", net="res152
     # Resume training
     if resume:
         load_name = os.path.join(output_dir,
-                                 '{}_{}_{}_{}_{}.pth'.format(arch, checksession, checkepoch, checkpoint, model_tag))
+                                 '{}_{}_{}_{}.pth'.format(arch, checksession, checkepoch, checkpoint))
         print("loading checkpoint %s" % (load_name))
         checkpoint = torch.load(load_name)
         session = checkpoint['session'] + 1
@@ -369,7 +384,7 @@ def train(dataset="kaggle_pna", train_ds ="train", arch="couplenet", net="res152
 
                 # Save model at checkpoints
         if mGPUs:
-            save_name = os.path.join(output_dir, '{}_{}_{}_{}_{}.pth'.format(arch, session, epoch, step, model_tag))
+            save_name = os.path.join(output_dir, '{}_{}_{}_{}.pth'.format(arch, session, epoch, step))
             save_checkpoint({
                 'session': session,
                 'epoch': epoch + 1,
@@ -379,7 +394,7 @@ def train(dataset="kaggle_pna", train_ds ="train", arch="couplenet", net="res152
                 'class_agnostic': class_agnostic,
             }, save_name)
         else:
-            save_name = os.path.join(output_dir, '{}_{}_{}_{}_{}.pth'.format(arch, session, epoch, step, model_tag))
+            save_name = os.path.join(output_dir, '{}_{}_{}_{}.pth'.format(arch, session, epoch, step))
             save_checkpoint({
                 'session': session,
                 'epoch': epoch + 1,
@@ -392,3 +407,6 @@ def train(dataset="kaggle_pna", train_ds ="train", arch="couplenet", net="res152
 
         end = time.time()
         print(end - start)
+
+if __name__ == '__main__':
+
