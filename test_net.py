@@ -43,16 +43,31 @@ lr = cfg.TRAIN.LEARNING_RATE
 momentum = cfg.TRAIN.MOMENTUM
 weight_decay = cfg.TRAIN.WEIGHT_DECAY
 
+def write_test_files():
+    model_repo_path = os.path.dirname(os.path.dirname(os.path.dirname(model.__file__)))
+
+    data_dir = 'data/PNAdevkit/PNA2018'
+    d = os.path.join(model_repo_path, data_dir, 'DCMImagesTest')
+    pids = [pid.split('.')[0] for pid in os.listdir(d)]
+
+    ImageSets_dir = os.path.join(model_repo_path, data_dir, 'ImageSets')
+    if not os.path.exists(ImageSets_dir):
+        os.mkdir(ImageSets_dir)
+
+    with open(os.path.join(ImageSets_dir, 'test.txt'), 'w') as f:
+        for pid in pids:
+            f.write("{}\n".format(pid))
+
+
 
 def test(dataset="kaggle_pna", test_ds="test", arch="couplenet", net="res152", load_dir="save", output_dir="output",
          cuda=True, large_scale=False, class_agnostic=False, checksession = 1, checkepoch=1, checkpoint=10021,
-         batch_size=1, vis=False, anchor_scales=4, min_conf=.5, model_tag="", **kwargs):
+         batch_size=1, vis=False, anchor_scales=4, min_conf=.5, **kwargs):
 
     print("Test Arguments: {}".format(locals()))
     method_kwargs = copy.deepcopy(locals())
 
     # create output directory
-    output_dir = os.path.join(output_dir, arch, net, dataset)
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
 
@@ -96,8 +111,7 @@ def test(dataset="kaggle_pna", test_ds="test", arch="couplenet", net="res152", l
 
     cfg_file = "cfgs/{}_ls.yml".format(net) if large_scale else "cfgs/{}.yml".format(net)
 
-    import model
-    model_repo_path = os.path.dirname(os.path.dirname(os.path.dirname(model.__file__)))
+    model_repo_path = os.path.dirname(os.path.dirname(os.path.dirname(lib.model.__file__)))
 
     if cfg_file is not None:
         cfg_from_file(os.path.join(model_repo_path,cfg_file))
@@ -137,11 +151,11 @@ def test(dataset="kaggle_pna", test_ds="test", arch="couplenet", net="res152", l
     print('{:d} roidb entries'.format(len(roidb)))
 
     # Trained network weights path
-    input_dir = load_dir + "/" + arch + "/" + net + "/" + dataset
+    input_dir = load_dir
     if not os.path.exists(input_dir):
         raise Exception('There is no input directory for loading network from ' + input_dir)
     load_name = os.path.join(input_dir,
-                             '{}_{}_{}_{}_{}.pth'.format(arch, checksession, checkepoch, checkpoint, model_tag))
+                             '{}_{}_{}_{}.pth'.format(arch, checksession, checkepoch, checkpoint))
 
     # Initialize the network:
     if net == 'vgg16':
@@ -189,7 +203,8 @@ def test(dataset="kaggle_pna", test_ds="test", arch="couplenet", net="res152", l
         else:
             method_kwargs[key] = value
 
-    with open('test_config.json', 'w') as fp:
+    test_config = os.path.join('test_config.json')
+    with open(test_config, 'w') as fp:
         json.dump(method_kwargs, fp)
 
     # Initialize the tensor holder
