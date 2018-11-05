@@ -23,6 +23,8 @@ from torch.utils.data.sampler import Sampler
 
 from model.utils.config import cfg, cfg_from_file, cfg_from_list
 from model.utils.net_utils import adjust_learning_rate, save_checkpoint, clip_gradient, apply_augmentations
+import copy
+import json
 
 
 # Data Sampler
@@ -55,13 +57,15 @@ class sampler(Sampler):
 
 def train(dataset="kaggle_pna", train_ds ="train", arch="couplenet", net="res152", start_epoch=1, max_epochs=20,
           disp_interval=100, save_dir="save", num_workers=4, cuda=True, large_scale=False, mGPUs=True, batch_size=4,
-          class_agnostic=False, anchor_scales=4, optimizer="sgd",lr_decay_step=10, lr_decay_gamma=.1, session=1,
+          class_agnostic=False, anchor_scales=4, optimizer="sgd", lr_decay_step=10, lr_decay_gamma=.1, session=1,
           resume=False, checksession=1, checkepoch=1, checkpoint=0, use_tfboard=False, flip_prob=0.0, scale=0.0,
           scale_prob=0.0, translate=0.0, translate_prob=0.0, angle=0.0, dist="cont", rotate_prob=0.0,
           shear_factor=0.0, shear_prob=0.0, rpn_loss_cls_wt=1, rpn_loss_box_wt=1, RCNN_loss_cls_wt=1,
-          RCNN_loss_bbox_wt=1, **kwargs):
+          RCNN_loss_bbox_wt=1, model_tag="",**kwargs):
 
     print("Train Arguments: {}".format(locals()))
+    method_kwargs = copy.deepcopy(locals())
+
 
     # Import network definition
     if arch == 'rcnn':
@@ -111,7 +115,6 @@ def train(dataset="kaggle_pna", train_ds ="train", arch="couplenet", net="res152
     resnet_kwargs = kwargs.pop("RESNET", None)
     mobilenet_kwargs = kwargs.pop("MOBILENET", None)
 
-
     if train_kwargs is not None:
         for key,value in train_kwargs.items():
             cfg["TRAIN"][key]=value
@@ -128,8 +131,32 @@ def train(dataset="kaggle_pna", train_ds ="train", arch="couplenet", net="res152
         for key,value in kwargs.items():
             cfg[key]=value
 
+    cfg.USE_GPU_NMS = cuda
+    if cuda:
+        cfg.CUDA = True
+
     print('Using config:')
     pprint.pprint(cfg)
+
+    for key,value in cfg.items():
+        if key == "TRAIN":
+            train_cfg = copy.deepcopy(value)
+            for t_key,t_value in train_cfg.items():
+                method_kwargs[key][t_key] = t_value
+        elif key == "RESNET":
+            resnet_cfg = copy.deepcopy(value)
+            for r_key, r_value in resnet_cfg.items():
+                method_kwargs[key][r_key] = r_value
+        elif key == "MOBILENET":
+            mobilenet_cfg = copy.deepcopy(value)
+            for m_key, m_value in mobilenet_cfg.items():
+                method_kwargs[key][m_key] = m_value
+        else:
+            method_kwargs[key] = value
+
+    with open('train_config.json', 'w') as fp:
+        json.dump(method_kwargs, fp)
+
     np.random.seed(cfg.RNG_SEED)
     print("LEARNING RATE: {}".format(cfg.TRAIN.LEARNING_RATE))
 
@@ -139,8 +166,6 @@ def train(dataset="kaggle_pna", train_ds ="train", arch="couplenet", net="res152
 
     # Train set
     # Note: Use validation set and disable the flipped to enable faster loading.
-    cfg.TRAIN.USE_FLIPPED = True
-    cfg.USE_GPU_NMS = cuda
     imdb, roidb, ratio_list, ratio_index = combined_roidb(imdb_name)
     train_size = len(roidb)
 
@@ -176,9 +201,6 @@ def train(dataset="kaggle_pna", train_ds ="train", arch="couplenet", net="res152
     im_info = Variable(im_info)
     num_boxes = Variable(num_boxes)
     gt_boxes = Variable(gt_boxes)
-
-    if cuda:
-        cfg.CUDA = True
 
     # Initilize the network:
     if net == 'vgg16':
@@ -226,7 +248,7 @@ def train(dataset="kaggle_pna", train_ds ="train", arch="couplenet", net="res152
     # Resume training
     if resume:
         load_name = os.path.join(output_dir,
-                                 '{}_{}_{}_{}.pth'.format(arch, checksession, checkepoch, checkpoint))
+                                 '{}_{}_{}_{}_{}.pth'.format(arch, checksession, checkepoch, checkpoint, model_tag))
         print("loading checkpoint %s" % (load_name))
         checkpoint = torch.load(load_name)
         session = checkpoint['session'] + 1
@@ -347,7 +369,7 @@ def train(dataset="kaggle_pna", train_ds ="train", arch="couplenet", net="res152
 
                 # Save model at checkpoints
         if mGPUs:
-            save_name = os.path.join(output_dir, '{}_{}_{}_{}.pth'.format(arch, session, epoch, step))
+            save_name = os.path.join(output_dir, '{}_{}_{}_{}_{}.pth'.format(arch, session, epoch, step, model_tag))
             save_checkpoint({
                 'session': session,
                 'epoch': epoch + 1,
@@ -357,7 +379,7 @@ def train(dataset="kaggle_pna", train_ds ="train", arch="couplenet", net="res152
                 'class_agnostic': class_agnostic,
             }, save_name)
         else:
-            save_name = os.path.join(output_dir, '{}_{}_{}_{}.pth'.format(arch, session, epoch, step))
+            save_name = os.path.join(output_dir, '{}_{}_{}_{}_{}.pth'.format(arch, session, epoch, step, model_tag))
             save_checkpoint({
                 'session': session,
                 'epoch': epoch + 1,

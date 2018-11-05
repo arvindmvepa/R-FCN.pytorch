@@ -46,53 +46,10 @@ weight_decay = cfg.TRAIN.WEIGHT_DECAY
 
 def test(dataset="kaggle_pna", test_ds="test", arch="couplenet", net="res152", load_dir="save", output_dir="output",
          cuda=True, large_scale=False, class_agnostic=False, checksession = 1, checkepoch=1, checkpoint=10021,
-         batch_size=1, vis=False, anchor_scales=4, min_conf=.5, load_config=False, **kwargs):
-
-    if load_config:
-        test_cfg = open("test_cfg.json")
-        test_cfg = test_cfg.read()
-        test_cfg = json.loads(test_cfg)
-        if "dataset" in test_cfg:
-            dataset = test_cfg.pop("dataset")
-        if "test_ds" in test_cfg:
-            test_ds = test_cfg.pop("test_ds")
-        if "arch" in test_cfg:
-            arch = test_cfg.pop("arch")
-        if "net" in test_cfg:
-            net = test_cfg.pop("net")
-        if "load_dir" in test_cfg:
-            load_dir = test_cfg.pop("load_dir")
-        if "output_dir" in test_cfg:
-            output_dir = test_cfg.pop("output_dir")
-        if "cuda" in test_cfg:
-            cuda = test_cfg.pop("cuda")
-        if "large_scale" in test_cfg:
-            large_scale = test_cfg.pop("large_scale")
-        if "class_agnostic" in test_cfg:
-            class_agnostic = test_cfg.pop("class_agnostic")
-        if "checksession" in test_cfg:
-            checksession = test_cfg.pop("checksession")
-        if "checkepoch" in test_cfg:
-            checkepoch = test_cfg.pop("checkepoch")
-        if "checkpoint" in test_cfg:
-            checkpoint = test_cfg.pop("checkpoint")
-        if "batch_size" in test_cfg:
-            batch_size = test_cfg.pop("batch_size")
-        if "vis" in test_cfg:
-            vis = test_cfg.pop("vis")
-        if "anchor_scales" in test_cfg:
-            anchor_scales = test_cfg.pop("anchor_scales")
-        if "min_conf" in test_cfg:
-            min_conf = test_cfg.pop("min_conf")
-        if "load_config" in test_cfg:
-            load_config = test_cfg.pop("load_config")
-        else:
-            kwargs = test_cfg
-        method_kwargs = test_cfg
-    else:
-        method_kwargs = copy.deepcopy(locals())
+         batch_size=1, vis=False, anchor_scales=4, min_conf=.5, model_tag="", **kwargs):
 
     print("Test Arguments: {}".format(locals()))
+    method_kwargs = copy.deepcopy(locals())
 
     # create output directory
     output_dir = os.path.join(output_dir, arch, net, dataset)
@@ -184,7 +141,7 @@ def test(dataset="kaggle_pna", test_ds="test", arch="couplenet", net="res152", l
     if not os.path.exists(input_dir):
         raise Exception('There is no input directory for loading network from ' + input_dir)
     load_name = os.path.join(input_dir,
-                             '{}_{}_{}_{}.pth'.format(arch, checksession, checkepoch, checkpoint))
+                             '{}_{}_{}_{}_{}.pth'.format(arch, checksession, checkepoch, checkpoint, model_tag))
 
     # Initialize the network:
     if net == 'vgg16':
