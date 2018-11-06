@@ -30,6 +30,7 @@ from model.utils.net_utils import save_net, load_net, vis_detections
 from datetime import datetime
 import pdb
 import sys
+import json
 
 try:
     xrange  # Python 2
@@ -339,3 +340,33 @@ def test(dataset="kaggle_pna", test_ds="test", arch="couplenet", net="res152", l
 
     end = time.time()
     print("test time: %0.4fs" % (end - start))
+
+
+if __name__ == '__main__':
+    # load inference config
+    inference_config = "/work/inference_config.json"
+    inference_config = open(inference_config)
+    inference_config = inference_config.read()
+    inference_config = json.loads(inference_config)
+
+    # extract model path
+    import model
+    model_repo_path = os.path.dirname(os.path.dirname(os.path.dirname(model.__file__)))
+
+    # write files in DCMImagesTest to text file in ImageSets
+    data_dir = 'data/PNAdevkit/PNA2018'
+    ImageSets_dir = os.path.join(model_repo_path, data_dir, 'ImageSets')
+
+    if not os.path.exists(ImageSets_dir):
+        os.mkdir(ImageSets_dir)
+
+    test_files = os.path.join(ImageSets_dir,'test.txt')
+
+    if not os.path.exists(test_files):
+        d = os.path.join(model_repo_path, data_dir, 'DCMImagesTest')
+        pids = [pid.split('.')[0] for pid in os.listdir(d)]
+        with open(test_files, 'w') as f:
+            for pid in pids:
+                f.write("{}\n".format(pid))
+
+    test(**inference_config)

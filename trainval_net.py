@@ -23,7 +23,7 @@ from torch.utils.data.sampler import Sampler
 
 from model.utils.config import cfg, cfg_from_file, cfg_from_list
 from model.utils.net_utils import adjust_learning_rate, save_checkpoint, clip_gradient, apply_augmentations
-
+import json
 
 # Data Sampler
 # Every Sampler subclass has to provide an __iter__ method, providing a way to iterate over indices of dataset
@@ -370,3 +370,35 @@ def train(dataset="kaggle_pna", train_ds ="train", arch="couplenet", net="res152
 
         end = time.time()
         print(end - start)
+
+if __name__ == '__main__':
+    # load train config file
+    train_config = "/work/train_config.json"
+    train_config = open(train_config)
+    train_config = train_config.read()
+    train_config = json.loads(train_config)
+
+    # extract model path
+    import model
+    model_repo_path = os.path.dirname(os.path.dirname(os.path.dirname(model.__file__)))
+
+    # write files in DCMImagesTrain to text file in ImageSets if it doesn't exist
+    data_dir = 'data/PNAdevkit/PNA2018'
+    ImageSets_dir = os.path.join(model_repo_path, data_dir, 'ImageSets')
+
+    if not os.path.exists(ImageSets_dir):
+        os.mkdir(ImageSets_dir)
+
+    train_files = os.path.join(ImageSets_dir, 'train.txt')
+
+    if not os.path.exists(train_files):
+        d = os.path.join(model_repo_path, data_dir, 'DCMImagesTrain')
+        pids = [pid.split('.')[0] for pid in os.listdir(d)]
+        with open(train_files, 'w') as f:
+            for pid in pids:
+                f.write("{}\n".format(pid))
+
+    train(**train_config)
+
+
+
